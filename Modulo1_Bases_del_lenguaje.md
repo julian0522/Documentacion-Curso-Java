@@ -1,4 +1,31 @@
 # Modulo 1 Bases del Lenguaje
+# 📚 Índice
+
+1. [Tipos De Datos](#tipos-de-datos)
+   - [Primitivos](#primitivos)
+     - [1. Enteros (números sin decimales)](#1-enteros-números-sin-decimales)
+     - [2. Decimales (punto flotante)](#2-decimales-punto-flotante)
+     - [3. Carácter](#3-carácter)
+     - [4. Booleano (lógico)](#4-booleano-lógico)
+	- [No Primitivos](#No Primitivos (**referenciados** o **reference types**))
+2. [No Primitivos (referenciados o reference types)](#no-primitivos-referenciados-o-reference-types)
+3. [Diferencia entre Tipos de Datos Primitivos y no Primitivos](#diferencia-entre-tipos-de-datos-primitivos-y-no-primitivos)
+4. [Inferencia de Tipo con `var` (Java 10+)](#inferencia-de-tipo-con-var-java-10)
+5. [Constantes](#constantes)
+   - [Sintaxis](#-sintaxis)
+   - [Ejemplo](#-ejemplo)
+   - [¿Qué pasa si intento cambiar una constante?](#️-qué-pasa-si-intento-cambiar-una-constante)
+   - [¿Dónde se usan?](#-dónde-se-usan)
+6. [Objeto String](#objeto-string)
+   - [¿Qué es un String en Java?](#-qué-es-un-string-en-java)
+   - [¿Qué es un String literal?](#qué-es-un-string-literal)
+   - [Métodos Para Los Strings](#métodos-para-los-strings)
+   - [Cadena de caracteres multilínea](#cadena-de-caracteres-multilínea)
+7. [Conversión de Tipos (Type Casting)](#conversión-de-tipos-type-casting)
+   - [Conversión Implícita (Widening Conversion - Ampliación)](#conversión-implícita-widening-conversion---ampliación)
+   - [Conversión Explícita (Casting - Narrowing Conversion - Estrechamiento)](#conversión-explícita-casting---narrowing-conversion---estrechamiento)
+
+---
 
 ## ¿Qué Es Java?
 
