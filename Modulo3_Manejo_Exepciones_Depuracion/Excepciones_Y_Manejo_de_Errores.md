@@ -20,6 +20,8 @@ Son _**problemas graves**_ que generalmente indican que la JVM (Java Virtual Mac
 
 Son **condiciones anómalas** que ocurren durante la ejecución de un programa y que un programa **puede manejar** y de las cuales **puede recuperarse**.
 
+Las excepciones en Java son eventos anormales que ocurren durante la ejecución o compilacion de un programa y que interrumpen el flujo normal de instrucciones. Se utilizan para manejar errores o condiciones inesperadas de forma controlada, evitando que el programa se detenga abruptamente.
+
 ### Características principales:
 - Se espera que se manejen usando bloques `try-catch`.
 - Pueden ser **verificadas** (checked) o **no verificadas** (unchecked).
@@ -384,6 +386,12 @@ public void leerArchivo(String nombreArchivo) throws IOException {
 
 Los métodos que llaman a otros métodos que lanzan excepciones verificadas deben manejar estas excepciones, ya sea capturándolas con bloques `try-catch` o declarando que también las lanzan. Esto garantiza que las excepciones no se pasen por alto y que se manejen de manera adecuada en algún nivel del código.
 
+En java, la declaracion de excepciones en la firma de un metodo (es decir, usando throws) solo es obligatoria para las excepciones verificadas *(checked exceptions)*, no para las no verificadas.
+
+#### ¿Puedo declarar una excepción no verificada en la firma de un metodo?
+
+Si, puedes, pero no es obligatorio. es util si quieres documentar que un metodo puede lanzar una excepcion.
+
 ```java
 public void procesarArchivo(String nombreArchivo) {
     try {
@@ -486,6 +494,105 @@ public void leerArchivo(String nombreArchivo) throws IOException {
 9.  **Establece y sigue un esquema claro para manejar excepciones**: Define una política de manejo de excepciones y asegúrate de que todos los desarrolladores del proyecto la sigan.
 10. **Revisa y refactoriza regularmente el código para mejorar el manejo de excepciones**: Asegúrate de que el manejo de excepciones sea eficiente y adecuado para el contexto del proyecto.
 
+# Propagación de Excepciones
+---
+
+## 🔹 1. ¿Qué es la propagación de excepciones?
+
+Cuando en Java ocurre una excepción (por ejemplo, `NullPointerException`, `IOException`, etc.), se crea un **objeto de excepción** y se "lanza" (`throw`).
+A partir de ese momento, Java busca **un bloque `catch` adecuado** en la pila de llamadas de métodos (**call stack**).
+
+* Si el método actual tiene un `try-catch` que la maneje → se captura ahí.
+* Si no la maneja → la excepción **se propaga hacia el método que lo llamó**.
+* Si sigue sin ser manejada → continúa subiendo hasta el **main()**.
+* Si llega al `main()` y no se maneja → el programa termina con un **error en tiempo de ejecución** y se imprime el stack trace.
+
+---
+
+## 🔹 2. Excepciones verificadas (checked exceptions)
+
+Ejemplos: `IOException`, `SQLException`.
+
+* El **compilador obliga** a que sean manejadas con `try-catch` o declaradas con `throws` en la firma del método.
+* Si un método puede lanzar una excepción verificada y no la manejas ni la declaras → error de compilación.
+
+📌 Ejemplo:
+
+```java
+import java.io.*;
+
+public class EjemploChecked {
+    public static void metodoA() throws IOException {
+        metodoB();
+    }
+
+    public static void metodoB() throws IOException {
+        throw new IOException("Error de IO");
+    }
+
+    public static void main(String[] args) {
+        try {
+            metodoA(); // Obligatorio manejarla o declararla
+        } catch (IOException e) {
+            System.out.println("Excepción capturada: " + e.getMessage());
+        }
+    }
+}
+```
+
+➡ Aquí la excepción **se propaga de `metodoB()` → `metodoA()` → `main()`** hasta que es capturada.
+
+---
+
+## 🔹 3. Excepciones no verificadas (unchecked exceptions)
+
+Ejemplos: `NullPointerException`, `ArithmeticException`.
+
+* **Heredan de `RuntimeException`.**
+* El compilador **NO obliga** a manejarlas ni a declararlas con `throws`.
+* Si no se manejan, se propagan igual que las checked, pero sin generar error de compilación.
+
+📌 Ejemplo:
+
+```java
+public class EjemploUnchecked {
+    public static void metodoA() {
+        metodoB();
+    }
+
+    public static void metodoB() {
+        int x = 10 / 0; // Lanza ArithmeticException
+    }
+
+    public static void main(String[] args) {
+        try {
+            metodoA(); // No obliga a try-catch, pero si no se maneja el programa se rompe
+        } catch (ArithmeticException e) {
+            System.out.println("Excepción capturada: " + e.getMessage());
+        }
+    }
+}
+```
+
+➡ La excepción se propaga de **`metodoB()` → `metodoA()` → `main()`**, hasta que es atrapada.
+
+---
+
+## 🔹 4. Diferencias principales en la propagación
+
+| Característica                         | Checked (verificadas)         | Unchecked (no verificadas)                    |
+| -------------------------------------- | ----------------------------- | --------------------------------------------- |
+| Compilador obliga a manejar o declarar | ✅ Sí                          | ❌ No                                          |
+| Propagación en runtime                 | ✅ Igual                       | ✅ Igual                                       |
+| Ejemplos                               | `IOException`, `SQLException` | `NullPointerException`, `ArithmeticException` |
+
+------
+
+# Lista de Reproduccion donde se explican las excepciones en Java
+
+https://www.youtube.com/watch?v=kGzwPunAOxk&list=PLTd5ehIj0goNuDBQuP5uy8dP-3V3h1m0V
+
+------
 
 # Ejercicio
 
