@@ -719,3 +719,173 @@ public class SistemaGestion {
     }
 }
 ```
+
+# Ejemplo 2
+
+* Excepciones **verificadas (checked)** y **no verificadas (unchecked)**
+* Uso de **try-catch-finally**
+* **Propagación de excepciones** con `throws`
+* **Excepciones personalizadas**
+* **Encadenamiento de excepciones**
+* **Envoltorio (wrapping)** de excepciones
+
+Vamos a hacerlo con un ejemplo de un **sistema de biblioteca** 🏛️📚.
+
+---
+
+## Ejemplo Completo
+
+```java
+import java.io.IOException;
+
+// Clase de excepción personalizada (checked)
+class LibroNoEncontradoException extends Exception {
+    public LibroNoEncontradoException(String mensaje) {
+        super(mensaje);
+    }
+
+    public LibroNoEncontradoException(String mensaje, Throwable causa) {
+        super(mensaje, causa); // encadenamiento de excepciones
+    }
+}
+
+// Otra excepción personalizada (unchecked)
+class OperacionInvalidaException extends RuntimeException {
+    public OperacionInvalidaException(String mensaje) {
+        super(mensaje);
+    }
+}
+
+// Clase que representa un libro
+class Libro {
+    private String titulo;
+
+    public Libro(String titulo) {
+        this.titulo = titulo;
+    }
+
+    public String getTitulo() {
+        return titulo;
+    }
+}
+
+// Clase Biblioteca
+class Biblioteca {
+
+    private Libro[] libros = {
+        new Libro("El Quijote"),
+        new Libro("Cien Años de Soledad"),
+        new Libro("Clean Code")
+    };
+
+    // Método que lanza una excepción checked
+    public Libro buscarLibro(String titulo) throws LibroNoEncontradoException {
+        for (Libro libro : libros) {
+            if (libro.getTitulo().equalsIgnoreCase(titulo)) {
+                return libro;
+            }
+        }
+        throw new LibroNoEncontradoException("Libro '" + titulo + "' no encontrado");
+    }
+
+    // Método que lanza una excepción no verificada (unchecked)
+    public void prestarLibro(String titulo) {
+        if (titulo == null || titulo.isEmpty()) {
+            throw new OperacionInvalidaException("El título del libro no puede estar vacío");
+        }
+        System.out.println("Libro '" + titulo + "' prestado correctamente.");
+    }
+
+    // Método que encapsula otra excepción (wrapping)
+    public void cargarDatos() throws LibroNoEncontradoException {
+        try {
+            // Simulamos error de IO
+            throw new IOException("Error al leer archivo de datos");
+        } catch (IOException e) {
+            // Encadenamos la IOException dentro de nuestra excepción personalizada
+            throw new LibroNoEncontradoException("No se pudo cargar la lista de libros", e);
+        }
+    }
+}
+
+public class ManejoExcepcionesDemo {
+    public static void main(String[] args) {
+
+        Biblioteca biblioteca = new Biblioteca();
+
+        // 1. Manejo de excepciones checked con try-catch-finally
+        try {
+            Libro libro = biblioteca.buscarLibro("Harry Potter");
+            System.out.println("Se encontró el libro: " + libro.getTitulo());
+        } catch (LibroNoEncontradoException e) {
+            System.err.println("Error: " + e.getMessage());
+        } finally {
+            System.out.println("Bloque finally ejecutado (siempre se ejecuta).");
+        }
+
+        // 2. Excepción no verificada (unchecked)
+        try {
+            biblioteca.prestarLibro(""); // causa excepción
+        } catch (OperacionInvalidaException e) {
+            System.err.println("Excepción no verificada: " + e.getMessage());
+        }
+
+        // 3. Encadenamiento de excepciones (cause)
+        try {
+            biblioteca.cargarDatos();
+        } catch (LibroNoEncontradoException e) {
+            System.err.println("Excepción encadenada: " + e.getMessage());
+            System.err.println("Causa original: " + e.getCause());
+        }
+
+        // 4. Propagación de excepciones
+        try {
+            metodoPropagaExcepcion();
+        } catch (Exception e) {
+            System.err.println("Excepción propagada hasta main: " + e.getMessage());
+        }
+
+        System.out.println("Programa finalizado correctamente ✅");
+    }
+
+    // Método que propaga excepción
+    public static void metodoPropagaExcepcion() throws Exception {
+        throw new Exception("Error propagado desde metodoPropagaExcepcion");
+    }
+}
+```
+
+---
+
+## 🔍 Explicación paso a paso
+
+1. **Excepciones personalizadas**
+
+   * `LibroNoEncontradoException` → checked (obliga a manejarla con try-catch o `throws`).
+   * `OperacionInvalidaException` → unchecked (extiende `RuntimeException`, no obliga a capturarla).
+
+2. **Checked vs Unchecked**
+
+   * `buscarLibro` lanza una checked.
+   * `prestarLibro` lanza una unchecked.
+
+3. **Encadenamiento de excepciones**
+
+   * En `cargarDatos`, se lanza un `IOException`, y lo envolvemos en un `LibroNoEncontradoException` con `throw new LibroNoEncontradoException("...", e);`.
+
+4. **Wrapping (envoltorio)**
+
+   * Mismo caso anterior: atrapamos una excepción y la convertimos en otra más específica para nuestra aplicación.
+
+5. **Propagación**
+
+   * `metodoPropagaExcepcion()` lanza una excepción y no la maneja. Se propaga hasta `main`.
+
+6. **finally**
+
+   * Siempre se ejecuta, incluso si hay excepción.
+
+---
+
+👉 Con este ejemplo se cubre todo el panorama de excepciones en Java.
+
