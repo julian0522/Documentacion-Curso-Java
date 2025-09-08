@@ -588,6 +588,161 @@ public class EjemploUnchecked {
 
 ------
 
+# 🔹 ¿Qué son las **Suppressed Exceptions** en Java?
+
+Las **suppressed exceptions** (excepciones suprimidas) son excepciones que ocurren **mientras otra excepción ya estaba siendo lanzada**, pero que no pueden propagarse directamente porque ya hay una excepción principal en curso.
+
+Java introdujo este mecanismo a partir de **Java 7**, principalmente con el uso del **try-with-resources**.
+
+Cuando usas `try-with-resources`, los recursos (por ejemplo, archivos, streams, conexiones) se cierran automáticamente al salir del bloque. Si ocurre una excepción dentro del bloque `try` y, al mismo tiempo, otra excepción al cerrar el recurso (en el `close()`), Java no puede lanzar ambas al mismo tiempo.
+
+Entonces:
+
+* La **excepción principal** es la que ocurrió en el `try`.
+* La otra (la del `close()`) se **suprime** y se guarda como **suppressed exception** dentro de la principal.
+
+---
+
+## 🔹 ¿Para qué sirven?
+
+* Evitan que se **pierda información** sobre errores secundarios que ocurren al cerrar recursos.
+* Permiten al desarrollador **diagnosticar mejor** problemas, ya que una excepción de cierre podría estar ocultando el error real.
+* Mantienen el flujo de ejecución **más claro**, mostrando una excepción principal, pero sin descartar las otras.
+
+---
+
+## 🔹 ¿Cómo se usan?
+
+1. **Cuando se lanzan automáticamente (try-with-resources):**
+
+```java
+import java.io.*;
+
+public class EjemploSuppressed {
+    public static void main(String[] args) {
+        try (
+            BufferedReader br = new BufferedReader(new FileReader("archivo.txt"));
+        ) {
+            // Si ocurre un error aquí...
+            String linea = br.readLine();
+            System.out.println(linea);
+
+        } catch (IOException e) {
+            System.out.println("Excepción principal: " + e);
+
+            // Ver todas las excepciones suprimidas
+            for (Throwable sup : e.getSuppressed()) {
+                System.out.println("Suppressed: " + sup);
+            }
+        }
+    }
+}
+```
+
+👉 Si ocurre un error al leer y luego otro al cerrar el `BufferedReader`, el segundo aparecerá como **suppressed**.
+
+---
+
+2. **Agregando excepciones suprimidas manualmente:**
+
+Java permite agregar una excepción como suprimida a otra usando:
+
+```java
+try {
+    throw new Exception("Principal");
+} catch (Exception e) {
+    Exception extra = new Exception("Suprimida");
+    e.addSuppressed(extra);
+
+    e.printStackTrace(); // mostrará ambas
+}
+```
+
+---
+
+3. **Obteniendo las excepciones suprimidas:**
+
+Se recuperan con:
+
+```java
+Throwable[] suprimidas = e.getSuppressed();
+```
+
+## 🔹 Ejemplo de **Suppressed Exceptions**
+```java
+public class Pedido {
+    private Inventario inventario;
+
+    public Pedido(Inventario inventario) {
+        this.inventario = inventario;
+    }
+
+    public void procesarPedido(String rutaArchivo) throws PedidoException {
+        // Inicializamos una lista donde se van a guardar las excepciones que ocurran al procesar cada línea del archivo
+        // Esto es para no detenerse en el primer error, sino acumularlos y reportarlos todos despues
+        List<Exception> errores = new ArrayList<>();
+
+        // try-with-resources para cerrar automáticamente el recurso
+        try (BufferedReader br = Files.newBufferedReader(Paths.get(rutaArchivo))) {
+            String linea;
+            while ((linea = br.readLine()) != null) {
+                try {
+                    // CSV esperado: idProducto,cantidad
+                    String[] partes = linea.split(",");
+                    int idProducto = Integer.parseInt(partes[0]);
+                    int cantidad = Integer.parseInt(partes[1]);
+
+                    Producto producto = inventario.buscarProducto(idProducto);
+                    producto.reducirStock(cantidad);
+
+                    System.out.println("Pedido procesado: " + cantidad + " x " + producto.getNombre());
+
+                    //Si ocurre cualquier excepción al procesar esa línea, en lugar de detener el programa, 
+                    //se guarda un PedidoException en la lista errores.
+                } catch (NumberFormatException e) {
+                    errores.add(new PedidoException("Error al convertir datos numéricos en: " + linea, e));
+                } catch (ProductoNoEncontradoException | StockInsuficienteException e) {
+                    errores.add(new PedidoException("Error en el pedido: " + linea, e) );
+                }
+            }
+        } catch (IOException e) {
+            throw new PedidoException("Error al leer archivo de pedidos", e);
+        }
+
+        /*
+         * Si la lista errores no está vacía, significa que hubo pedidos inválidos.
+         * Se crea un PedidoException general con el mensaje "Se encontraron errores al procesar pedidos".
+         * Se agregan todas las excepciones individuales como suppressed exceptions (addSuppressed).
+         * Finalmente, se lanza este PedidoException
+         * 
+         ! Suppressed exceptions = excepciones adicionales que acompañan a una excepción principal.
+         ! Se usan para no perder información cuando ocurren varios errores.
+         ! Se acceden con getSuppressed().
+         ? por eso usamos excepciones suprimidas las cuales son las excepciones que puede lanzar la lectura del archivo y esas excepcioens
+         ? las guardamos en una excepcion principal que es la que al final se propaga para no perder la informcaion ni el origen de los errores
+         ? se tomo este enfoque para que el programa no se pare cuando salte la primer excepcion si no que procese todo el archivo y regrese todos
+         ? los posibles errorres encontrados para luego guardarlos en un log y asi dejar trazabilidad de los mismos
+         */
+        if (!errores.isEmpty()) {
+            // puedes lanzar una sola excepción con todas dentro
+            PedidoException pe = new PedidoException("Se encontraron errores al procesar pedidos", null);
+            for (Exception e : errores) {
+                pe.addSuppressed(e); // ✅ añade todas como "suppressed"
+            }
+            throw pe;
+        }
+    }
+}
+```
+
+---
+
+✅ En resumen:
+Las **suppressed exceptions** en Java son excepciones adicionales que ocurren durante otra excepción (usualmente en `try-with-resources`). No se pierden, sino que se guardan dentro de la excepción principal, lo que ayuda a depurar y entender mejor los errores.
+
+---
+
+
 # Lista de Reproduccion donde se explican las excepciones en Java
 
 https://www.youtube.com/watch?v=kGzwPunAOxk&list=PLTd5ehIj0goNuDBQuP5uy8dP-3V3h1m0V
