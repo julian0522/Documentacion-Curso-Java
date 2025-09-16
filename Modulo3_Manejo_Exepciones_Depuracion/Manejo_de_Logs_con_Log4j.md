@@ -343,7 +343,9 @@ En **Log4j**, un **Rolling File Appender** (a veces llamado *RollingFile* o *Rol
   
   <Appenders>
     <!-- Rolling File Appender -->
+    <!-- append = "true" es para que el log no se sobreescriba cada vez que la aplicacion se ejecute-->
     <RollingFile name="ArchivoLog"
+                 append = "true"
                  fileName="logs/app.log"
                  filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz">
 
@@ -407,6 +409,7 @@ Esto es útil porque escribir en archivo puede ser más lento que la ejecución 
   <Appenders>
     <!-- Rolling File Appender -->
     <RollingFile name="ArchivoLog"
+                 append = "true"
                  fileName="logs/app.log"
                  filePattern="logs/app-%d{yyyy-MM-dd}-%i.log.gz">
 
@@ -521,6 +524,7 @@ Este archivo lo pondrías en `src/main/resources/log4j2.xml`.
 
         <!-- Rolling File: rota por tamaño (10MB) y cada día -->
         <RollingFile name="FileLogger"
+                     append = "true"
                      fileName="${LOG_DIR}/app.log"
                      filePattern="${LOG_DIR}/app-%d{yyyy-MM-dd}-%i.log.gz">
 
