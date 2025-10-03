@@ -697,3 +697,194 @@ Y en **archivo `logs/app.log`**:
 
 ---
 
+# Implementacion de Log4j con SLF4j
+
+* **SLF4J (Simple Logging Facade for Java)**: No hace logging por sí mismo, es una **interfaz común**. Tú escribes tu código usando SLF4J y luego puedes conectar cualquier implementación de logging (Log4j, Logback, java.util.logging, etc.).
+* **Log4j**: Es la **implementación concreta** que realmente genera los logs, escribe en archivo, consola, etc.
+
+Entonces la idea es:
+
+```text
+Tu código → SLF4J (API) → Log4j (implementación) → Archivo/Consola
+```
+
+Esto te evita “atarlas” directamente a Log4j en tu código.
+
+---
+
+### 2️⃣ Dependencias Maven
+
+Para usar SLF4J con Log4j 2, necesitas algo así:
+
+```xml
+<project xmlns="http://maven.apache.org/POM/4.0.0" 
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 
+                             http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.ejemplo</groupId>
+    <artifactId>logging-slf4j-log4j2</artifactId>
+    <version>1.0.0</version>
+    <packaging>jar</packaging>
+
+    <name>Proyecto Logging SLF4J + Log4j2</name>
+    <description>Ejemplo de proyecto Maven usando SLF4J con Log4j2</description>
+
+    <properties>
+        <maven.compiler.source>17</maven.compiler.source>
+        <maven.compiler.target>17</maven.compiler.target>
+        <slf4j.version>2.0.9</slf4j.version>
+        <log4j.version>2.21.0</log4j.version>
+    </properties>
+
+    <!-- Manejo centralizado de versiones -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.slf4j</groupId>
+                <artifactId>slf4j-api</artifactId>
+                <version>${slf4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-api</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-slf4j2-impl</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+
+    <dependencies>
+        <!-- SLF4J API -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+        </dependency>
+
+        <!-- Log4j2 Core -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
+        </dependency>
+
+        <!-- Log4j2 API -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+        </dependency>
+
+        <!-- Binding SLF4J → Log4j2 -->
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j2-impl</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- Plugin de compilación Java -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.11.0</version>
+                <configuration>
+                    <source>${maven.compiler.source}</source>
+                    <target>${maven.compiler.target}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+</project>
+
+```
+
+* `slf4j-api`: tu código depende solo de esto.
+* `log4j-slf4j2-impl`: hace que los llamados a SLF4J sean manejados por Log4j 2.
+* `log4j-core`: necesaria para ejecutar Log4j.
+
+> **Nota:** Evita tener `slf4j-log4j12` si usas Log4j 2, porque eso es para la versión 1.x.
+
+---
+
+### 🔹 Características de este POM
+
+1. **Versiones fijas:** `slf4j-api` 2.0.9 y Log4j 2.21.0.
+2. **`dependencyManagement`:** asegura que cualquier dependencia transitiva use las mismas versiones.
+3. **Estructura lista para Java 17** (puedes cambiar `maven.compiler.source` y `target` a tu versión de Java).
+4. **SLF4J como fachada:** tu código puede usar solo `org.slf4j.Logger` y `LoggerFactory`, mientras Log4j 2 hace el logging real.
+5. Fácil de ampliar: puedes agregar appenders de Log4j, configuraciones, o librerías adicionales sin conflictos de versión.
+
+---
+
+### 3️⃣ Código de ejemplo
+
+Con SLF4J no escribes `Logger logger = LogManager.getLogger(...)` de Log4j directamente. Usas SLF4J:
+
+```java
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+public class Ejemplo {
+    private static final Logger logger = LoggerFactory.getLogger(Ejemplo.class);
+
+    public static void main(String[] args) {
+        logger.info("Este es un log de información");
+        logger.warn("Esto es una advertencia");
+        logger.error("Esto es un error con excepción", new RuntimeException("Oops"));
+    }
+}
+```
+
+* Este código **no depende de Log4j directamente**.
+* Cuando SLF4J detecta la implementación `log4j-slf4j2-impl` en el classpath, todos los logs se van a Log4j.
+
+---
+
+### 4️⃣ Configuración de Log4j 2
+
+Necesitas un archivo `log4j2.xml` (en `src/main/resources`):
+
+```xml
+<Configuration status="WARN">
+    <Appenders>
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
+        </Console>
+        <File name="FileLogger" fileName="app.log">
+            <PatternLayout pattern="%d{yyyy-MM-dd HH:mm:ss} %-5p %c{1}:%L - %m%n"/>
+        </File>
+    </Appenders>
+    <Loggers>
+        <Root level="info">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="FileLogger"/>
+        </Root>
+    </Loggers>
+</Configuration>
+```
+
+Con esto:
+
+* Los logs se imprimen en consola y se guardan en `app.log`.
+* Puedes controlar niveles por paquete o clase.
+
+---
+
+### 5️⃣ Ventajas de este enfoque
+
+1. El código depende solo de SLF4J → puedes cambiar Log4j por Logback sin tocar el código.
+2. Mejor compatibilidad con librerías que usan SLF4J.
+3. Log4j sigue manejando la performance y características avanzadas.
+
