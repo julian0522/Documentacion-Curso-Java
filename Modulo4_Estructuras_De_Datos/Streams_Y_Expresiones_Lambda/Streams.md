@@ -83,13 +83,127 @@ Stream<Double> aleatorios = Stream.generate(Math::random);
 
 ---
 
-## ⚙️ 5. Operaciones en Streams
+## ⚙️ 5. **Etapas del ciclo de vida de un Stream**
+
+Un Stream **no funciona como un bucle tradicional**, sino como una **tubería (pipeline)** de operaciones.
+Su ciclo se divide en **tres fases**:
+
+| Etapa                                | Tipo                     | Qué hace                                                                                                |
+| ------------------------------------ | ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **1️⃣ Creación**                     | Fuente → Stream          | Se crea el flujo de datos desde una colección, arreglo o generador.                                     |
+| **2️⃣ Transformación (Intermedias)** | Stream → Stream          | Se definen operaciones que transforman o filtran los datos. Son *perezosas* (no ejecutan nada todavía). |
+| **3️⃣ Operación terminal**           | Stream → Valor/colección | Dispara el procesamiento y devuelve un resultado.                                                       |
+
+---
+
+### 🔁  **Flujo de ejecución (pipeline)**
+
+El ciclo de ejecución de un Stream se comporta así:
+
+1. **Creas el Stream** (aún no se ejecuta nada).
+2. **Encadenas operaciones intermedias** (`filter`, `map`, `sorted`, `peek`, etc.).
+   Estas operaciones **no se ejecutan todavía** — el Stream **solo construye un plan de trabajo**.
+3. **Llamas a una operación terminal** (`forEach`, `collect`, `count`, `reduce`, etc.).
+   En ese momento:
+
+   * El Stream se **abre**.
+   * Java **itera internamente** sobre los datos fuente.
+   * Aplica las operaciones intermedias **en cadena y por elemento**.
+   * **Genera el resultado**.
+4. El Stream se **cierra automáticamente** (no se puede reutilizar).
+
+---
+
+### ⚙️ **Ejemplo paso a paso**
+
+```java
+List<Integer> numeros = List.of(1, 2, 3, 4, 5);
+
+long total = numeros.stream()
+    .filter(n -> {
+        System.out.println("Filtrando " + n);
+        return n % 2 == 0;
+    })
+    .map(n -> {
+        System.out.println("Multiplicando " + n);
+        return n * 10;
+    })
+    .count();
+
+System.out.println("Total: " + total);
+```
+
+---
+
+### 🧠 ¿Qué pasa internamente?
+
+1️⃣ `numeros.stream()`
+→ Se crea el Stream (nada se ejecuta).
+
+2️⃣ `.filter(...)`
+→ Se agrega al pipeline, pero no se ejecuta aún.
+
+3️⃣ `.map(...)`
+→ Se agrega al pipeline, sigue esperando.
+
+4️⃣ `.count()`
+→ **¡Se activa el pipeline!**
+El Stream empieza a recorrer la lista **uno por uno**:
+
+| Elemento | Acción                                   | Resultado   |
+| -------- | ---------------------------------------- | ----------- |
+| 1        | `Filtrando 1` → no pasa el filtro        | se descarta |
+| 2        | `Filtrando 2` → pasa → `Multiplicando 2` | cuenta +1   |
+| 3        | `Filtrando 3` → no pasa                  | se descarta |
+| 4        | `Filtrando 4` → pasa → `Multiplicando 4` | cuenta +1   |
+| 5        | `Filtrando 5` → no pasa                  | se descarta |
+
+📤 **Salida:**
+
+```
+Filtrando 1
+Filtrando 2
+Multiplicando 2
+Filtrando 3
+Filtrando 4
+Multiplicando 4
+Filtrando 5
+Total: 2
+```
+
+---
+
+### 🧠 **Punto clave: Ejecución *perezosa* (Lazy Evaluation)**
+
+👉 Las operaciones intermedias **no se ejecutan inmediatamente**.
+Solo cuando llega una **operación terminal**, el Stream **procesa cada elemento uno a uno a través de todas las etapas**.
+
+Visualízalo así:
+
+```
+Colección -> filter() -> map() -> collect()
+```
+
+No se procesa toda la lista con `filter` y luego toda con `map`.
+En realidad, se procesa **elemento por elemento** a través de la cadena completa.
+
+🔁 Es decir:
+
+```
+Elemento 1 -> filter -> map -> (si pasa) collect
+Elemento 2 -> filter -> map -> (si pasa) collect
+...
+```
+
+---
+
+## ⚙️ 6. Operaciones en Streams
 
 Las operaciones se dividen en **intermedias** y **terminales**.
 
 ---
 
-## 🔄 6. Operaciones intermedias
+## 🔄 7. Operaciones intermedias
 
 Son **lazy** (perezosas): no se ejecutan hasta que se invoque una operación terminal.
 Cada una **devuelve un nuevo Stream**.
@@ -127,7 +241,7 @@ LUCÍA
 
 ---
 
-## 🏁 7. Operaciones terminales
+## 🏁 8. Operaciones terminales
 
 | **Método**                              | **Tipo de Retorno** | **Descripción**                                                        | **Ejemplo**                                                |
 | --------------------------------------- | ------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------- |
@@ -243,7 +357,7 @@ Estadísticas: IntSummaryStatistics{count=5, sum=20, min=3, average=4.0, max=5}
 Concatenados: Ana, Pedro, Lucía, Luis, Ana
 ```
 
-## 🧮 8. Ejemplo completo de procesamiento
+## 🧮 9. Ejemplo completo de procesamiento
 
 ```java
 List<Integer> numeros = List.of(5, 8, 3, 2, 8, 10, 4);
@@ -270,7 +384,7 @@ Suma total: 24
 
 ---
 
-## 📦 9. `collect()` y la clase `Collectors`
+## 📦 10. `collect()` y la clase `Collectors`
 
 La operación `collect()` **recolecta los resultados** de un Stream en una estructura final, normalmente usando la clase `Collectors`.
 
@@ -318,7 +432,7 @@ Map<Character, List<String>> porInicial =
 
 ---
 
-## ⚙️ 10. `reduce()` — reducción manual
+## ⚙️ 11. `reduce()` — reducción manual
 
 El método `reduce()` combina todos los elementos de un Stream usando una función acumuladora.
 
@@ -333,7 +447,7 @@ System.out.println(producto); // 24
 
 ---
 
-## 🔄 11. Stream paralelo
+## 🔄 12. Stream paralelo
 
 Los Streams pueden ejecutarse en paralelo para aprovechar varios núcleos del procesador.
 
@@ -356,7 +470,7 @@ System.out.println("Suma: " + suma);
 
 ---
 
-## 🧠 12. Streams primitivos
+## 🧠 13. Streams primitivos
 
 Para evitar *autoboxing*, existen variantes especializadas:
 
@@ -376,7 +490,7 @@ System.out.println(suma); // 15
 
 ---
 
-## 🧩 13. Relación entre **Streams**, **Lambdas** y **Optional**
+## 🧩 14. Relación entre **Streams**, **Lambdas** y **Optional**
 
 | Concepto     | Rol principal                                                               | Ejemplo de interacción                |
 | ------------ | --------------------------------------------------------------------------- | ------------------------------------- |
@@ -398,7 +512,7 @@ primero.ifPresent(System.out::println); // Luis
 
 ---
 
-## ⚠️ 14. Buenas prácticas y errores comunes
+## ⚠️ 15. Buenas prácticas y errores comunes
 
 ✅ **Usa Streams para transformar y filtrar datos**, no para modificar estructuras existentes.
 ✅ **Evita usar `peek()`** salvo para depuración.
@@ -409,7 +523,7 @@ primero.ifPresent(System.out::println); // Luis
 
 ---
 
-## 🧾 15. Resumen visual
+## 🧾 16. Resumen visual
 
 | Etapa          | Ejemplo                         | Descripción     |
 | -------------- | ------------------------------- | --------------- |
@@ -420,7 +534,7 @@ primero.ifPresent(System.out::println); // Luis
 
 ---
 
-## 🚀 16. Conclusión
+## 🚀 17. Conclusión
 
 Los **Streams en Java** son una herramienta **potente, funcional y declarativa** para procesar colecciones y datos.
 
