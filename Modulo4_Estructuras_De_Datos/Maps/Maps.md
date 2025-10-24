@@ -175,8 +175,8 @@ System.out.println(puntuaciones); // {Carlos=80, Lucía=95}
 * Mayor consumo de memoria.
 
 **¿Cuándo usarlo?**
-- Cuando necesitas **ordenar automáticamente las claves**.
-- Útil para reportes, ranking, o cualquier caso donde el orden alfabético o numérico importa.
+- Cuando quieres **predecibilidad en el orden** en que agregaste los elementos.
+- Ideal para estructuras tipo historial, listas ordenadas, cachés simples.
 
 ---
 
@@ -212,8 +212,8 @@ System.out.println(notas); // {Ana=90, Pedro=85}
 * No permite claves `null`.
 
 **¿Cuándo usarlo?**
-- Cuando quieres **predecibilidad en el orden** en que agregaste los elementos.
-- Ideal para estructuras tipo historial, listas ordenadas, cachés simples.
+- Cuando necesitas **ordenar automáticamente las claves**.
+- Útil para reportes, ranking, o cualquier caso donde el orden alfabético o numérico importa.
 
 ---
 
