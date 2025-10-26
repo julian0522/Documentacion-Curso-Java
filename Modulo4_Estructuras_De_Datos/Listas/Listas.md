@@ -121,6 +121,51 @@ public class EjemploLinkedList {
 | `clear()`             | Elimina todos los elementos.        | `lista.clear();`            |
 | `isEmpty()`           | Verifica si está vacía.             | `lista.isEmpty();`          |
 
+### 🔍 **1. Buscar elementos en una lista**
+
+| Método                                | Descripción                                                                  | Ejemplo                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------- |
+| `contains(Object o)`                  | Verifica si la lista contiene un elemento.                                   | `lista.contains("Hola")`                                 |
+| `get(int index)`                      | Devuelve el elemento en una posición específica.                             | `lista.get(2)`                                           |
+| `indexOf(Object o)`                   | Devuelve el índice de la primera aparición del elemento (o `-1` si no está). | `lista.indexOf("Hola")`                                  |
+| `lastIndexOf(Object o)`               | Devuelve el índice de la última aparición del elemento.                      | `lista.lastIndexOf("Hola")`                              |
+| `isEmpty()`                           | Verifica si la lista está vacía.                                             | `lista.isEmpty()`                                        |
+| `size()`                              | Devuelve la cantidad de elementos de la lista.                               | `lista.size()`                                           |
+| `subList(int fromIndex, int toIndex)` | Devuelve una porción de la lista.                                            | `lista.subList(2, 5)`                                    |
+| `stream().filter(...)` *(Java 8+)*    | Permite buscar con condiciones personalizadas.                               | `lista.stream().filter(x -> x.startsWith("A")).toList()` |
+
+---
+
+### 🗑️ **2. Eliminar elementos de una lista**
+
+| Método                                              | Descripción                                                      | Ejemplo                               |
+| --------------------------------------------------- | ---------------------------------------------------------------- | ------------------------------------- |
+| `remove(int index)`                                 | Elimina el elemento en la posición indicada.                     | `lista.remove(0)`                     |
+| `remove(Object o)`                                  | Elimina la **primera** ocurrencia del objeto especificado.       | `lista.remove("Hola")`                |
+| `removeAll(Collection<?> c)`                        | Elimina todos los elementos que estén en la colección dada.      | `lista.removeAll(otraLista)`          |
+| `clear()`                                           | Elimina **todos** los elementos de la lista.                     | `lista.clear()`                       |
+| `retainAll(Collection<?> c)`                        | Conserva solo los elementos que están también en otra colección. | `lista.retainAll(listaFiltrada)`      |
+| `removeIf(Predicate<? super E> filter)` *(Java 8+)* | Elimina los elementos que cumplan una condición.                 | `lista.removeIf(x -> x.length() < 3)` |
+
+---
+
+### ✏️ **3. Actualizar o modificar elementos**
+
+| Método                                              | Descripción                                         | Ejemplo                                 |
+| --------------------------------------------------- | --------------------------------------------------- | --------------------------------------- |
+| `set(int index, E element)`                         | Reemplaza el elemento en la posición dada.          | `lista.set(1, "Nuevo valor")`           |
+| `add(int index, E element)`                         | Inserta un elemento en una posición específica.     | `lista.add(2, "Insertado")`             |
+| `add(E element)`                                    | Agrega un elemento al final.                        | `lista.add("Nuevo")`                    |
+| `replaceAll(UnaryOperator<E> operator)` *(Java 8+)* | Modifica todos los elementos aplicando una función. | `lista.replaceAll(String::toUpperCase)` |
+
+---
+
+### 💡 **Consejos útiles**
+
+* Para **recorrer y buscar condicionalmente**, usa `for`, `for-each` o **Streams** (`filter`, `map`, `findFirst`, etc.).
+* Para **eliminar mientras recorres**, usa `Iterator` o `removeIf` (evita `ConcurrentModificationException`).
+* Para **actualizar masivamente**, `replaceAll()` es ideal en Java 8+.
+
 ---
 
 ## 🔁 7. Recorrer una lista
@@ -312,4 +357,3 @@ Visualmente sería:
 
 Las **listas en Java** son una herramienta esencial para manejar colecciones dinámicas de datos.
 Son **flexibles, potentes y ampliamente usadas** en casi cualquier aplicación Java, desde proyectos pequeños hasta sistemas empresariales.
-
