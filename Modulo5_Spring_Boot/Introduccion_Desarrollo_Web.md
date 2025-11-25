@@ -372,7 +372,114 @@ PUT /users/10
 DELETE /users/10
 ```
 
+-----
+
+## 📐 Reglas para Diseñar APIs RESTful con Verbos
+
+Para asegurar que tu API sea verdaderamente RESTful (adherente a los principios de REST), sigue estas reglas:
+
+### 1\. Nombres de Recursos: Siempre Sustantivos en Plural
+
+Los *endpoints* (rutas) deben referirse a los **recursos**, no a las acciones. Usa sustantivos en **plural**. La acción ya la define el verbo HTTP.
+
+| Incorrecto | Correcto (RESTful) |
+| :--- | :--- |
+| `GET /getProductos` | **`GET /productos`** |
+| `POST /crearUsuario` | **`POST /usuarios`** |
+
+### 2\. Uso de `GET` (Lectura)
+
+  * **Idempotencia y Seguridad:** `GET` debe ser **idempotente** (repetir la petición no cambia el resultado) y **seguro** (no debe tener efectos secundarios en el servidor).
+  * **Filtrado/Búsqueda:** Utiliza **parámetros de consulta** (`?clave=valor`) para filtrar, ordenar o paginar las colecciones.
+      * *Ejemplo:* `GET /api/productos?categoria=electronica&ordenarPor=precio`
+
+### 3\. Uso de `POST` (Creación)
+
+  * **Creación:** Úsalo exclusivamente para crear nuevos recursos.
+  * **Respuesta:** Tras un `POST` exitoso, el servidor debe responder con el código de estado **`201 Created`** e incluir la URI del nuevo recurso creado en el encabezado `Location`.
+
+### 4\. Uso de `PUT` vs. `PATCH` (Actualización)
+
+Esta es la diferencia más importante a entender:
+
+  * **`PUT` (Reemplazo Total):** Si quieres cambiar el nombre de un producto, debes enviar **TODO** el objeto de producto (nombre, precio, stock, descripción, etc.). Si omites un campo, se considerará que ese campo debe ser vaciado o reemplazado con un valor nulo.
+      * *Uso:* Cambios importantes o cuando el cliente siempre envía el objeto completo.
+  * **`PATCH` (Actualización Parcial):** Si quieres cambiar solo el nombre de un producto, solo envías el campo `nombre`. El resto de los campos del recurso permanecen intactos.
+      * *Uso:* Pequeñas modificaciones para ahorrar ancho de banda y evitar errores de reemplazo.
+
+### 5\. Uso de `DELETE` (Eliminación)
+
+  * **Respuesta:** Tras una eliminación exitosa, responde con **`204 No Content`** si no vas a devolver nada, o **`200 OK`** si confirmas la eliminación devolviendo un mensaje.
+
+-----
+
+## 🛑 Cuándo NO Usar los Verbos Estándar
+
+A veces, una operación no encaja en CRUD (por ejemplo, una operación de negocio compleja como "enviar correo" o "cerrar sesión"). En estos casos, puedes considerar:
+
+1.  **Modelar como Recurso:** Si es posible, trata la operación como un recurso secundario.
+      * *Ejemplo:* Para "cerrar una orden", usa `PUT /api/ordenes/123/estado` con el valor `cerrada`.
+2.  **Operación en POST:** Si realmente es una **acción** que no devuelve un recurso, puedes usar `POST` con un nombre de recurso que represente la acción (aunque es menos RESTful).
+      * *Ejemplo:* `POST /api/ordenes/123/enviar-notificacion`
+
 ---
+
+---
+
+## 🏗️ Concepto del Sub-Recurso
+
+Un **Sub-Recurso** es un recurso que existe solo en el contexto de otro recurso principal (o *padre*).
+
+La URL refleja esta relación de contención usando el **`slash (/)`** para anidar las entidades.
+
+### Estructura General
+
+La sintaxis sigue el patrón:
+
+$$\text{/api/\{recurso\_padre\_plural\}/\{id\_padre\}/\{sub\_recurso\_plural\}}$$
+
+| Elemento | Ejemplo | Propósito |
+| :--- | :--- | :--- |
+| **Recurso Padre** | `/clientes` | La colección principal de entidades. |
+| **ID del Padre** | `/clientes/456` | Identifica a un cliente específico. |
+| **Sub-Recurso** | `/clientes/456/pedidos` | Identifica la colección de **pedidos** que pertenecen *solo* al cliente `456`. |
+
+---
+
+## 📝 Aplicaciones del Principio del Sub-Recurso
+
+El uso de sub-recursos tiene dos aplicaciones principales en el diseño REST:
+
+### 1. Relaciones de Colección (Uno a Muchos)
+
+Se usa para acceder a colecciones de entidades que son propiedad de un recurso principal.
+
+| Verbo | Ruta RESTful | Acción |
+| :--- | :--- | :--- |
+| **`GET`** | `/clientes/456/pedidos` | Obtener **todos los pedidos** del cliente `456`. |
+| **`POST`** | `/clientes/456/pedidos` | **Crear un nuevo pedido** y asignárselo automáticamente al cliente `456`. |
+| **`GET`** | `/clientes/456/pedidos/101` | Obtener un **pedido específico** (`101`) del cliente `456`. |
+
+Esto garantiza la **coherencia de datos**, ya que la URL te obliga a pensar en el contexto del padre.
+
+### 2. Manipulación de Propiedades Específicas (Transiciones de Estado)
+
+Como vimos en el ejemplo anterior, se utiliza para apuntar y manipular una **propiedad específica** del recurso padre, especialmente aquellas que representan un **estado** o un campo único.
+
+| Verbo | Ruta RESTful | Cuerpo (Body) | Acción |
+| :--- | :--- | :--- | :--- |
+| **`GET`** | `/pedidos/123/estado` | *(vacío)* | Obtener el estado actual del pedido `123`. |
+| **`PUT`** | `/pedidos/123/estado` | `"enviado"` | **Reemplazar** el estado del pedido `123` con "enviado". |
+
+En este caso, `/estado` no es una colección, sino un punto de acceso directo para modificar una propiedad clave del recurso principal `/pedidos/123`, manteniendo la URL libre de verbos de acción.
+
+## 🌟 Beneficios del Diseño con Sub-Recursos
+
+1.  **Claridad y Semántica:** La URL es más descriptiva y refleja las relaciones reales de tu modelo de datos (Ej: un pedido no existe sin un cliente que lo haya hecho).
+2.  **Organización:** Ayuda a estructurar grandes APIs de forma jerárquica y lógica.
+3.  **Seguridad y Permisos:** Facilita la aplicación de reglas de negocio y seguridad. Por ejemplo, podrías permitir que solo un usuario *Administrador* pueda acceder a `/clientes/456/facturas`, mientras que el cliente `456` solo puede ver sus propias `/clientes/456/pedidos`.
+
+En esencia, el Principio del Sub-Recurso asegura que tu API hable el mismo lenguaje que tu modelo de negocio, usando URLs como la herramienta para expresar las **relaciones jerárquicas** entre tus datos.
 
 # 🧳 10. Sesiones, Cookies, Tokens
 
