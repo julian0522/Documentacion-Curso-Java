@@ -362,6 +362,18 @@ Este es el principio central que define la naturaleza de REST. Para lograr una i
 * **Mensajes Autodescriptivos:** Cada mensaje de respuesta debe contener suficiente información para describir cómo procesar el mensaje.
 * **HATEOAS (Hypermedia as the Engine of Application State):** El recurso devuelto debe contener enlaces a otros recursos relacionados, guiando al cliente sobre qué acciones puede realizar a continuación. (Este principio es a menudo omitido o aplicado de forma parcial en muchas APIs "RESTful").
 
+### 5. Sistema en Capas (Layered System) 
+Permite que la comunicación pase por intermediarios (proxies, gateways, balanceadores de carga) sin que cliente y servidor lo sepan directamente.
+
+**Beneficios de REST:** Simplicidad, Interoperabilidad (cualquier cliente que entienda HTTP y JSON puede interactuar), Escalabilidad.
+
+### **Anotaciones Clave en Spring Boot para REST:**
+
+Spring Boot, a través de Spring MVC, proporciona anotaciones muy útiles para construir APIs REST:
+
+* `@RestController`: Se aplica a una clase. Es una anotación de conveniencia que combina `@Controller` y `@ResponseBody`. `@Controller` marca la clase como un manejador de peticiones web, y `@ResponseBody` indica que el valor de retorno de los métodos debe ser escrito directamente en el cuerpo de la respuesta HTTP (Spring Boot usará un convertidor, como Jackson para JSON, por defecto).
+* `@GetMapping`, `@PostMapping`, `@PutMapping`, `@DeleteMapping`, `@PatchMapping`: Se aplican a métodos dentro de un `@RestController`. Mapean la ruta URL y el verbo HTTP específico a ese método Java.
+
 Ejemplo RESTful:
 
 ```
