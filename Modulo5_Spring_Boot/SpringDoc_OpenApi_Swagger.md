@@ -52,6 +52,7 @@ A diferencia de Swagger 2 (que usaba `@Api`, `@ApiOperation`), OpenAPI 3 utiliza
 ### Para el Modelo (DTOs)
 
 * **`@Schema`**: Describe un objeto o una propiedad (permite poner ejemplos, descripciones y marcar si es obligatorio).
+* `@Schema` tiene una propiedad al definirla sobre un campo en modelo para definir si ese campo es requerido o no, se puede colocar para cuando automaticamente no reconozca cuales campos son reuqeridos, esta propiedad es `requiredMode = RequiredMode.REQUIRED`.
 
 ---
 
@@ -63,7 +64,7 @@ A diferencia de Swagger 2 (que usaba `@Api`, `@ApiOperation`), OpenAPI 3 utiliza
 @Schema(description = "Representa un usuario en el sistema")
 public class UsuarioDTO {
 
-    @Schema(example = "1", description = "ID único del usuario")
+    @Schema(example = "1", description = "ID único del usuario", requiredMode = RequiredMode.REQUIRED)
     private Long id;
 
     @Schema(example = "Juan Perez", required = true)
