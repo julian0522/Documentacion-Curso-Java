@@ -8,6 +8,8 @@ Permiten **definir métodos anónimos** (sin nombre) y tratarlos como **valores*
 
 En esencia, una **expresión lambda** es una **función que se puede pasar como argumento o almacenar en una variable**.
 
+Las expresiones Lambda son una forma concisa de representar funciones anonimas que pueden pasarse como argumentos o usarse como valores. es basicamente una implementacion inline de una interfaz funcional(una funcion con un solo metodo abstracto).
+
 ---
 
 ## 🧠 2. ¿Por qué existen las expresiones Lambda?

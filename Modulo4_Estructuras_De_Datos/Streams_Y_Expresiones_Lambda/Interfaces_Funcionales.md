@@ -420,7 +420,7 @@ public class EjemploStreams {
 
         List<String> resultado = nombres.stream()
                 .filter(n -> n.startsWith("L"))           // Predicate
-                .map(String::toUpperCase)                 // Function
+                .map(String::toUpperCase)                 // Function o UnaryOperator
                 .sorted()                                 // Comparator (funcional)
                 .toList();
 
